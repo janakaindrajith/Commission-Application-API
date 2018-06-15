@@ -364,10 +364,12 @@ namespace ComissionWebAPI.Controllers
                 bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_TOT_AMT", "PID_TOTAL_AMT"));
                 bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_SYS_OR_MAN", "PID_SYS_MAN"));
                 bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_RV_NO", "PID_RV_NO"));
-                //bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_RECEIPT_BRANCH", "PID_BRANCH"));
+                bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_BAL_TYPE", "PID_BAL_TYPE"));
+
+                //bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_RECEIPT_BRANCH", "PID_BRANCH"));PID_BAL_TYPE
 
 
-                bulkcopy.DestinationTableName = "hci_tbl_pid_dm_19_02_2018_b";
+                bulkcopy.DestinationTableName = "HCI_TBL_MAY_PID_ACC_02";// "HCI_TBL_MAY_PID_ACC";// "HCI_TBL_MAY_PID_ACC";
                 try
                 {
                     bulkcopy.WriteToServer(Dt);
@@ -415,7 +417,7 @@ namespace ComissionWebAPI.Controllers
                 }
                 else if (UploadType == "ReceiptManualUpload")
                 {
-                    excelCommand = new OleDbCommand("SELECT `DATE`".ToString() + "as PID_RECEIPT_DATE ,  + `CUSTOMER_NAME`".ToString() + " as PID_CUSTOMER_NAME, `RECEIPT_NO`".ToString() + " as PID_RECEIPT_NO, `BRANCH_CODE`".ToString() + " as PID_BRANCH ,`PROPOSAL_NO`".ToString() + " as PID_PROPOSAL_NO, `POLICY_NO`".ToString() + " as PID_POLICY_NO, `RECEIPT_AMOUNT`".ToString() + " as PID_RECEIPT_AMT,`PAYMENT_MODE`".ToString() + " as PID_PAYMENT_MTD,`AGENT`".ToString() + " as PID_AGT_CODE,   `TABLE`".ToString() + " as PID_TABLE,`TERM`".ToString() + " as PID_TERM, `BANK_CODE`".ToString() + " as PID_BANK_CODE,`MODE`".ToString().Trim() + " as PID_MODE,`TXN_CODE`".ToString() + " as PID_TXN_CODE  ,`INSTALL_PREM`".ToString() + " as PID_INSTALLMENT_AMT ,`RECEIPT_TYPE`".ToString() + " as PID_RECEIPT_TYPE ,`PRODUCT_CODE`".ToString() + " as PID_PRODUCT_CODE ,`POLICY_BANK`".ToString() + " as PID_POLICY_BANK ,`POLICY_YEAR`".ToString() + " as PID_POLICY_YEAR , `TOT_AMT`".ToString() + " as PID_TOT_AMT , `SYS_OR_MAN`".ToString() + " as PID_SYS_OR_MAN, `RV_NO`".ToString() + " as PID_RV_NO, `PID_RECEIPT_BRANCH`".ToString() + " as PID_RECEIPT_BRANCH  FROM [RECEIPT$]", excelConn);
+                    excelCommand = new OleDbCommand("SELECT `DATE`".ToString() + "as PID_RECEIPT_DATE ,  + `CUSTOMER_NAME`".ToString() + " as PID_CUSTOMER_NAME, `RECEIPT_NO`".ToString() + " as PID_RECEIPT_NO, `BRANCH_CODE`".ToString() + " as PID_BRANCH ,`PROPOSAL_NO`".ToString() + " as PID_PROPOSAL_NO, `POLICY_NO`".ToString() + " as PID_POLICY_NO, `RECEIPT_AMOUNT`".ToString() + " as PID_RECEIPT_AMT,`PAYMENT_MODE`".ToString() + " as PID_PAYMENT_MTD,`AGENT`".ToString() + " as PID_AGT_CODE,   `TABLE`".ToString() + " as PID_TABLE,`TERM`".ToString() + " as PID_TERM, `BANK_CODE`".ToString() + " as PID_BANK_CODE,`MODE`".ToString().Trim() + " as PID_MODE,`TXN_CODE`".ToString() + " as PID_TXN_CODE  ,`INSTALL_PREM`".ToString() + " as PID_INSTALLMENT_AMT ,`RECEIPT_TYPE`".ToString() + " as PID_RECEIPT_TYPE ,`PRODUCT_CODE`".ToString() + " as PID_PRODUCT_CODE ,`POLICY_BANK`".ToString() + " as PID_POLICY_BANK ,`POLICY_YEAR`".ToString() + " as PID_POLICY_YEAR , `TOT_AMT`".ToString() + " as PID_TOT_AMT , `SYS_OR_MAN`".ToString() + " as PID_SYS_OR_MAN, `RV_NO`".ToString() + " as PID_RV_NO, `PID_RECEIPT_BRANCH`".ToString() + " as PID_RECEIPT_BRANCH , `PID_BAL_TYPE`".ToString() + " as PID_BAL_TYPE  FROM [RECEIPT$]", excelConn);
 
                     //excelCommand = new OleDbCommand(string.Format(@"SELECT [DATE] FROM [{0}]","RECEIPT$"), excelConn);
                 }

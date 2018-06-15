@@ -83,7 +83,7 @@ namespace ComissionWebAPI.Controllers
 
             sql = " select t.pid_receipt_no,t.pid_receipt_date,t.pid_customer_name,t.pid_proposal_no,t.pid_policy_no, "+
                   " CASE WHEN t.pid_receipt_amt IS NULL THEN 0  ELSE t.pid_receipt_amt END as pid_receipt_amt ,t.pid_time_slab, CASE WHEN t.pid_confirm_amt IS NULL THEN 0  ELSE t.pid_confirm_amt END as pid_confirm_amt, t.pid_confirm_date, t.pid_rv_no, t.pid_bal_type,t.pid_agt_code, t.pid_payment_mtd " +
-                  " from hci_tbl_pid_dm_all_rec_t1 t where(" + sqlWhere + ")";
+                  " from HCI_TBL_MAY_PID_ACC t where(" + sqlWhere + ")";
             
 
             command = new OracleCommand(sql, connection);

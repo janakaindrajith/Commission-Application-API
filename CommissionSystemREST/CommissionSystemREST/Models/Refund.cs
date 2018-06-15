@@ -29,5 +29,6 @@ namespace ComissionWebAPI.Models
         public string RfdRecNarration { get; set; }
         public string RfdRecUpdatedBy { get; set; }
         public string RfdRecUpdatedDate { get; set; }
+        public string RfdPaymentMTD { get; set; }
     }
 }
