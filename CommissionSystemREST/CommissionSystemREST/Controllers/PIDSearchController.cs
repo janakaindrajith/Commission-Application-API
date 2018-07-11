@@ -48,7 +48,7 @@ namespace ComissionWebAPI.Controllers
 
             if (PIDSearch.PID_RECEIPT_NO != null && PIDSearch.PID_RECEIPT_NO != "")
             {
-                sqlWhere = sqlWhere + "t.pid_receipt_no = '"+ PIDSearch.PID_RECEIPT_NO.ToUpper() + "' AND";
+                sqlWhere = sqlWhere + "substr(t.pid_receipt_no,0,13) = '" + PIDSearch.PID_RECEIPT_NO.ToUpper() + "' AND";
             }
 
             if (PIDSearch.PID_AGT_CODE != null && PIDSearch.PID_AGT_CODE != "")
@@ -83,7 +83,7 @@ namespace ComissionWebAPI.Controllers
 
             sql = " select t.pid_receipt_no,t.pid_receipt_date,t.pid_customer_name,t.pid_proposal_no,t.pid_policy_no, "+
                   " CASE WHEN t.pid_receipt_amt IS NULL THEN 0  ELSE t.pid_receipt_amt END as pid_receipt_amt ,t.pid_time_slab, CASE WHEN t.pid_confirm_amt IS NULL THEN 0  ELSE t.pid_confirm_amt END as pid_confirm_amt, t.pid_confirm_date, t.pid_rv_no, t.pid_bal_type,t.pid_agt_code, t.pid_payment_mtd " +
-                  " from HCI_TBL_MAY_PID_ACC t where(" + sqlWhere + ")";
+                  " from HCI_TBL_MAY_PID_ACC_01 t where(" + sqlWhere + ")";
             
 
             command = new OracleCommand(sql, connection);

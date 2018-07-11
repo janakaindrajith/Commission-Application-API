@@ -17,7 +17,7 @@ namespace ComissionWebAPI.Controllers
 
         // GET: api/Bank
         [System.Web.Http.HttpGet]
-        public IEnumerable<BankBranch> Get(Int32 BankID)
+        public IEnumerable<BankBranch> Get(String BankID)
         {
 
 

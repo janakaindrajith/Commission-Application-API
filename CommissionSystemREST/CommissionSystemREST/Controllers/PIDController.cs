@@ -190,7 +190,7 @@ namespace ComissionWebAPI.Controllers
             "CASE WHEN t.PID_ACT_CONFIRM_DATE IS NULL THEN to_date('01/01/1900', 'DD/MM/RRRR')  ELSE to_date(t.PID_ACT_CONFIRM_DATE, 'DD/MM/RRRR') END, " +
             "CASE WHEN t.PID_FMT_OPBAL IS NULL THEN 0  ELSE t.PID_FMT_OPBAL END, " +
             "CASE WHEN t.PID_NEXT_OPBAL IS NULL THEN ''  ELSE t.PID_NEXT_OPBAL END " +
-            "FROM HCI_TBL_MAY_PID_ACC t  WHERE t.PID_RECEIPT_NO=:V_PID_RECEIPT_NO";
+            "FROM HCI_TBL_MAY_PID_ACC_01 t  WHERE t.PID_RECEIPT_NO=:V_PID_RECEIPT_NO";
             command = new OracleCommand(sql, connection);
             command.Parameters.Add(new OracleParameter("V_PID_RECEIPT_NO", id));
             connection.Open();

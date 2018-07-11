@@ -18,6 +18,8 @@ using System.Web.Configuration;
 using Oracle.DataAccess.Client;
 
 
+
+
 namespace ComissionWebAPI.Controllers
 {
     public class UploadDocController : ApiController
@@ -164,11 +166,11 @@ namespace ComissionWebAPI.Controllers
 
 
 
-                DataTable Dt = ConvertExceltoDatatable(_localFileName, vAGT_CODE);
+                DataTable Dt = ConvertExceltoDatatable(_localFileName, vAGT_CODE, UserID);
                 //BulkCopy(Dt);
                 if (vAGT_CODE == "DPTSManualUpload")
                 {
-                    BulkCopyDPTS(Dt);
+                    BulkCopyDPTS(Dt, UserID);
                 }
                 else if (vAGT_CODE == "ReceiptManualUpload")
                 {
@@ -240,11 +242,11 @@ namespace ComissionWebAPI.Controllers
 
 
 
-                DataTable Dt = ConvertExceltoDatatable(_localFileName, vAGT_CODE);   // DPTSManualUpload   /   ReceiptManualUpload
+                DataTable Dt = ConvertExceltoDatatable(_localFileName, vAGT_CODE,UserID);   // DPTSManualUpload   /   ReceiptManualUpload
 
                 if (vAGT_CODE == "DPTSManualUpload")
                 {
-                    BulkCopyDPTS(Dt);
+                    BulkCopyDPTS(Dt, UserID);
                 }
                 else if (vAGT_CODE == "ReceiptManualUpload")
                 {
@@ -289,7 +291,7 @@ namespace ComissionWebAPI.Controllers
 
 
 
-        public void BulkCopyDPTS(DataTable Dt)
+        public void BulkCopyDPTS(DataTable Dt,string UserID)
         {
             OracleConnection Oracleconn = new OracleConnection(WebConfigurationManager.ConnectionStrings["OracleConString"].ConnectionString);
             Oracleconn.Open();
@@ -313,12 +315,31 @@ namespace ComissionWebAPI.Controllers
                 //bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("DPTS_TIME_SLAB_INDEX", "TFR_AMT1"));
                 bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("DPTS_PROCESS_IND", "DPTS_PROCESS_IND"));
 
+                bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("DPTS_UPLOAD_BY", "DPTS_UPLOAD_BY"));
+                ////bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("DPTS_UPLOAD_DATE", "DPTS_UPLOAD_DATE"));
+                bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("DPTS_UPLOAD_TYPE", "DPTS_UPLOAD_TYPE"));
 
-                bulkcopy.DestinationTableName = "HCI_TBL_DPTS_TEMP";
+
+                bulkcopy.DestinationTableName = "HCI_TBL_DPTS_TEMP_BEFORE";
                 try
                 {
                     bulkcopy.WriteToServer(Dt);
                     Oracleconn.Close();
+
+
+
+                    OracleConnection connection = new OracleConnection(ConnectionString);
+                    connection.Open();
+                    OracleCommand cmd = null;
+                    cmd = new OracleCommand("HCI_SP_DPTS_DATA_MOVE");
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Connection = connection;
+                    cmd.Parameters.Add("V_USER_ID", OracleDbType.Char).Value = UserID;
+                    cmd.ExecuteNonQuery();
+                    connection.Close();
+
+
+
 
                 }
                 catch (Exception ex)
@@ -327,6 +348,9 @@ namespace ComissionWebAPI.Controllers
                 }
             }
         }
+
+
+
 
         public void BulkCopyRECEIPT(DataTable Dt)
         {
@@ -366,10 +390,21 @@ namespace ComissionWebAPI.Controllers
                 bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_RV_NO", "PID_RV_NO"));
                 bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_BAL_TYPE", "PID_BAL_TYPE"));
 
-                //bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_RECEIPT_BRANCH", "PID_BRANCH"));PID_BAL_TYPE
+                bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_UPLOAD_BY", "PID_UPLOAD_BY"));
+                //bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_UPLOAD_DATE", "PID_UPLOAD_DATE"));
+                bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_UPLOAD_TYPE", "PID_UPLOAD_TYPE"));
 
 
-                bulkcopy.DestinationTableName = "HCI_TBL_MAY_PID_ACC_02";// "HCI_TBL_MAY_PID_ACC";// "HCI_TBL_MAY_PID_ACC";
+                bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_CONFIRM_IND", "PID_CONFIRM_IND"));
+                bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_REFUND_IND", "PID_REFUND_IND"));
+                bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_REVERSE_IND", "PID_REVERSE_IND"));
+                bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_COMM_CAL_IND", "PID_COMM_CAL_IND"));
+                bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_IS_HELD_RECEIPT", "PID_IS_HELD_RECEIPT"));
+                bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_CHEQUE_RET_IND", "PID_CHEQUE_RET_IND"));
+                bulkcopy.ColumnMappings.Add(new OracleBulkCopyColumnMapping("PID_AVAILABLE_AMT", "PID_AVAILABLE_AMT"));
+
+
+                bulkcopy.DestinationTableName = "HCI_TBL_MAY_PID_ACC_01";// "HCI_TBL_MAY_PID_ACC";// "HCI_TBL_MAY_PID_ACC";
                 try
                 {
                     bulkcopy.WriteToServer(Dt);
@@ -384,7 +419,7 @@ namespace ComissionWebAPI.Controllers
         }
 
 
-        public DataTable ConvertExceltoDatatable(string location, string UploadType)
+        public DataTable ConvertExceltoDatatable(string location, string UploadType,string UserID)
         {
             try
             {
@@ -413,11 +448,13 @@ namespace ComissionWebAPI.Controllers
 
                 if (UploadType == "DPTSManualUpload")
                 {
-                    excelCommand = new OleDbCommand("SELECT `DPTS_RECEIPT_NO`".ToString() + "as DPTS_RECEIPT_NO ,  `DPTS_POLICY_NO`".ToString() + " as DPTS_POLICY_NO, `DPTS_PREM_RECEIPT_NO`".ToString() + " as DPTS_PREM_RECEIPT_NO, `DPTS_RECEIPT_AMT`".ToString() + " as DPTS_RECEIPT_AMT ,`DPTS_TIME_SLAB`".ToString() + " as DPTS_TIME_SLAB,`DPTS_AGENT`".ToString() + " as DPTS_AGENT,`DPTS_TABLE`".ToString() + " as DPTS_TABLE,`DPTS_TERM`".ToString() + " as DPTS_TERM,`DPTS_MODE`".ToString() + " as DPTS_MODE,`DPTS_TRANSFER_AMT`".ToString() + " as DPTS_TRANSFER_AMT,`DPTS_VARIANCE`".ToString() + " as DPTS_VARIANCE,`DPTS_COMM_MONTH`".ToString() + " as DPTS_COMM_MONTH,`DPTS_COMM_YEAR`".ToString() + " as DPTS_COMM_YEAR,`DPTS_PROCESS_IND`".ToString() + " as DPTS_PROCESS_IND FROM [Sheet1$]", excelConn);
+                    excelCommand = new OleDbCommand("SELECT `DPTS_RECEIPT_NO`".ToString() + "as DPTS_RECEIPT_NO ,  `DPTS_POLICY_NO`".ToString() + " as DPTS_POLICY_NO, `DPTS_PREM_RECEIPT_NO`".ToString() + " as DPTS_PREM_RECEIPT_NO, `DPTS_RECEIPT_AMT`".ToString() + " as DPTS_RECEIPT_AMT ,`DPTS_TIME_SLAB`".ToString() + " as DPTS_TIME_SLAB,`DPTS_AGENT`".ToString() + " as DPTS_AGENT,`DPTS_TABLE`".ToString() + " as DPTS_TABLE,`DPTS_TERM`".ToString() + " as DPTS_TERM,`DPTS_MODE`".ToString() + " as DPTS_MODE,`DPTS_TRANSFER_AMT`".ToString() + " as DPTS_TRANSFER_AMT,`DPTS_VARIANCE`".ToString() + " as DPTS_VARIANCE,`DPTS_COMM_MONTH`".ToString() + " as DPTS_COMM_MONTH,`DPTS_COMM_YEAR`".ToString() + " as DPTS_COMM_YEAR,`DPTS_PROCESS_IND`".ToString() + " as DPTS_PROCESS_IND,'"+UserID+ "' as DPTS_UPLOAD_BY,'"+DateTime.Now+ "' as DPTS_UPLOAD_DATE, 'MANUAL_UPLOAD' AS DPTS_UPLOAD_TYPE FROM [Sheet1$]", excelConn);
                 }
                 else if (UploadType == "ReceiptManualUpload")
                 {
-                    excelCommand = new OleDbCommand("SELECT `DATE`".ToString() + "as PID_RECEIPT_DATE ,  + `CUSTOMER_NAME`".ToString() + " as PID_CUSTOMER_NAME, `RECEIPT_NO`".ToString() + " as PID_RECEIPT_NO, `BRANCH_CODE`".ToString() + " as PID_BRANCH ,`PROPOSAL_NO`".ToString() + " as PID_PROPOSAL_NO, `POLICY_NO`".ToString() + " as PID_POLICY_NO, `RECEIPT_AMOUNT`".ToString() + " as PID_RECEIPT_AMT,`PAYMENT_MODE`".ToString() + " as PID_PAYMENT_MTD,`AGENT`".ToString() + " as PID_AGT_CODE,   `TABLE`".ToString() + " as PID_TABLE,`TERM`".ToString() + " as PID_TERM, `BANK_CODE`".ToString() + " as PID_BANK_CODE,`MODE`".ToString().Trim() + " as PID_MODE,`TXN_CODE`".ToString() + " as PID_TXN_CODE  ,`INSTALL_PREM`".ToString() + " as PID_INSTALLMENT_AMT ,`RECEIPT_TYPE`".ToString() + " as PID_RECEIPT_TYPE ,`PRODUCT_CODE`".ToString() + " as PID_PRODUCT_CODE ,`POLICY_BANK`".ToString() + " as PID_POLICY_BANK ,`POLICY_YEAR`".ToString() + " as PID_POLICY_YEAR , `TOT_AMT`".ToString() + " as PID_TOT_AMT , `SYS_OR_MAN`".ToString() + " as PID_SYS_OR_MAN, `RV_NO`".ToString() + " as PID_RV_NO, `PID_RECEIPT_BRANCH`".ToString() + " as PID_RECEIPT_BRANCH , `PID_BAL_TYPE`".ToString() + " as PID_BAL_TYPE  FROM [RECEIPT$]", excelConn);
+                    String PID_UPLOAD_DATE = Convert.ToString(DateTime.Now.ToShortDateString());
+
+                    excelCommand = new OleDbCommand("SELECT `DATE`".ToString() + "as PID_RECEIPT_DATE ,  + `CUSTOMER_NAME`".ToString() + " as PID_CUSTOMER_NAME, `RECEIPT_NO`".ToString() + " as PID_RECEIPT_NO, `BRANCH_CODE`".ToString() + " as PID_BRANCH ,`PROPOSAL_NO`".ToString() + " as PID_PROPOSAL_NO, `POLICY_NO`".ToString() + " as PID_POLICY_NO, `RECEIPT_AMOUNT`".ToString() + " as PID_RECEIPT_AMT,`PAYMENT_MODE`".ToString() + " as PID_PAYMENT_MTD,`AGENT`".ToString() + " as PID_AGT_CODE,   `TABLE`".ToString() + " as PID_TABLE,`TERM`".ToString() + " as PID_TERM, `BANK_CODE`".ToString() + " as PID_BANK_CODE,`MODE`".ToString().Trim() + " as PID_MODE,`TXN_CODE`".ToString() + " as PID_TXN_CODE  ,`INSTALL_PREM`".ToString() + " as PID_INSTALLMENT_AMT ,`RECEIPT_TYPE`".ToString() + " as PID_RECEIPT_TYPE ,`PRODUCT_CODE`".ToString() + " as PID_PRODUCT_CODE ,`POLICY_BANK`".ToString() + " as PID_POLICY_BANK ,`POLICY_YEAR`".ToString() + " as PID_POLICY_YEAR , `TOT_AMT`".ToString() + " as PID_TOT_AMT , `SYS_OR_MAN`".ToString() + " as PID_SYS_OR_MAN, `RV_NO`".ToString() + " as PID_RV_NO, `PID_RECEIPT_BRANCH`".ToString() + " as PID_RECEIPT_BRANCH , `PID_BAL_TYPE`".ToString() + " as PID_BAL_TYPE , '" + UserID + "' as PID_UPLOAD_BY, '" + PID_UPLOAD_DATE + "' as PID_UPLOAD_DATE, 'MANUAL_UPLOAD' AS PID_UPLOAD_TYPE, 'NO' AS PID_CONFIRM_IND , 'NO' AS PID_REFUND_IND, 'NO' AS PID_REVERSE_IND, 'NO' AS PID_COMM_CAL_IND, 'NO' AS PID_IS_HELD_RECEIPT, 'NO' AS PID_CHEQUE_RET_IND , `TOT_AMT`".ToString() + " as PID_AVAILABLE_AMT  FROM [RECEIPT$]", excelConn);
 
                     //excelCommand = new OleDbCommand(string.Format(@"SELECT [DATE] FROM [{0}]","RECEIPT$"), excelConn);
                 }
@@ -431,7 +468,7 @@ namespace ComissionWebAPI.Controllers
 
                 return dtPatterns;
             }
-            catch (Exception)
+            catch (Exception EX)
             {
 
                 throw;
