@@ -151,7 +151,7 @@ namespace ComissionWebAPI.Controllers
             "t.RFD_REC_NARRATION, " +
             "t.RFD_REC_UPDATED_BY, " +
             "t.RFD_REC_UPDATED_DATE " +
-            "FROM HCI_TBL_REFUNDS t WHERE t.rfd_type = 1 and t.RFD_PROPOSAL_NO = '" + ProposalNo  + "' AND T.RFD_STATUS = 5 ";// WHERE T.RFD_STATUS = 1 ";
+            "FROM HCI_TBL_REFUNDS t WHERE t.rfd_type = 1 and t.RFD_PROPOSAL_NO = '" + ProposalNo + "' AND T.RFD_STATUS = 5 ";// WHERE T.RFD_STATUS = 1 ";
 
             command = new OracleCommand(sql, connection);
             try
@@ -305,8 +305,8 @@ namespace ComissionWebAPI.Controllers
 
 
             string sql = "SELECT  CASE WHEN t.RFD_ID IS NULL THEN 0  ELSE t.RFD_ID END, " +
-                         "lpad(t.rfd_receipt_no, 13) as RFD_RECEIPT_NO,  "+
-                         "CASE WHEN t.RFD_REFUND_DATE IS NULL THEN to_date('01/01/1900', 'DD/MM/RRRR')  ELSE to_date(t.RFD_REFUND_DATE, 'DD/MM/RRRR') END,  "+
+                         "lpad(t.rfd_receipt_no, 13) as RFD_RECEIPT_NO,  " +
+                         "CASE WHEN t.RFD_REFUND_DATE IS NULL THEN to_date('01/01/1900', 'DD/MM/RRRR')  ELSE to_date(t.RFD_REFUND_DATE, 'DD/MM/RRRR') END,  " +
                          "'1' as RFD_TYPE, " +
                          "sum(t.rfd_amt) as RFD_AMT,CASE WHEN t.RFD_PERCENTAGE IS NULL THEN 0  ELSE t.RFD_PERCENTAGE END , " +
                          "t.RFD_BY ," +
@@ -314,7 +314,7 @@ namespace ComissionWebAPI.Controllers
                          "t.RFD_PROCESS_IND ,t.RFD_RV_NO,t.RFD_PV_NO , 'XXX' AS RFD_BAL_TYPE , t.RFD_CREATED_BY , CASE WHEN t.RFD_CREATED_DATE IS NULL THEN to_date('01/01/1900', 'DD/MM/RRRR')  ELSE to_date(t.RFD_CREATED_DATE, 'DD/MM/RRRR') END , " +
                          "CASE WHEN t.RFD_EFFECTIVE_END_DATE IS NULL THEN to_date('01/01/1900', 'DD/MM/RRRR')  ELSE to_date(t.RFD_EFFECTIVE_END_DATE, 'DD/MM/RRRR') END, t.RFD_STATUS , t.RFD_POLICY_NO , t.RFD_PROPOSAL_NO,PID.PID_PAYMENT_MTD " +
                          "FROM Hci_Tbl_May_Refund t ,  HCI_TBL_MAY_PID_ACC_01 PID " +
-                         "WHERE t.rfd_type = 1 and T.RFD_STATUS = 5 AND T.RFD_PAYMENT_TYPE = 'CHEQUE' AND t.RFD_ID = '" + RefundID + "'" +
+                         "WHERE T.RFD_EFFECTIVE_END_DATE IS NULL AND t.rfd_type = 1 and T.RFD_STATUS = 5 AND T.RFD_PAYMENT_TYPE = 'CHEQUE' AND t.RFD_ID = '" + RefundID + "'" +
                          "AND PID.PID_RECEIPT_NO = lpad(t.rfd_receipt_no, 13) " +
                          "GROUP BY t.rfd_id,lpad(t.rfd_receipt_no, 13),CASE WHEN t.RFD_REFUND_DATE IS NULL THEN to_date('01/01/1900', 'DD/MM/RRRR')  ELSE to_date(t.RFD_REFUND_DATE, 'DD/MM/RRRR') END,RFD_TYPE,CASE WHEN t.RFD_PERCENTAGE IS NULL THEN 0  ELSE t.RFD_PERCENTAGE END, " +
                          "T.RFD_BY,T.RFD_REASON ,  t.RFD_AGT_CODE,T.RFD_PROCESS_IND, " +
@@ -939,52 +939,129 @@ namespace ComissionWebAPI.Controllers
 
         [HttpPost]
         [ActionName("UpdateRecStatus")]
-        public HttpResponseMessage UpdateRecStatus(Refund obj)
+        public HttpResponseMessage UpdateRecStatus(string[] args)
         {
+
+            string TempReceiptNo = "";
+            string TempRefundStatus = "";
+            string TempRefundID = "";
+            string TempUserID = "";
+
             OracleConnection connection1 = new OracleConnection(ConnectionString);
             OracleCommand command1;
-            try
+
+            foreach (string item in args)
             {
 
 
-                if (obj.RfdReceiptNo == "")
+                TempReceiptNo = item.Substring(item.IndexOf("Parameter1:") + 11, item.IndexOf("Parameter2:") - 11);
+
+                TempRefundStatus = item.Substring(item.IndexOf("Parameter2:") + 11, item.IndexOf("Parameter3:") - (item.IndexOf("Parameter2:") + 11));
+
+                TempRefundID = item.Substring(item.IndexOf("Parameter3:") + 11, item.IndexOf("Parameter4:") - (item.IndexOf("Parameter3:") + 11));
+
+                TempUserID = item.Substring(item.IndexOf("Parameter4:") + 11, item.IndexOf("Parameter5:") - (item.IndexOf("Parameter4:") + 11));
+
+
+
+                try
                 {
-                    return Request.CreateResponse(HttpStatusCode.OK);
+
+
+                    connection1.Open();
+                    command1 = new OracleCommand("HCI_SP_REC_STATUS_UPDATE");
+                    command1.CommandType = CommandType.StoredProcedure;
+                    command1.Connection = connection1;
+
+                    command1.Parameters.Add("V_RFD_ID", OracleType.Number).Value = TempRefundID;
+                    command1.Parameters.Add("V_RFD_RECEIPT_NO", OracleType.VarChar).Value = TempReceiptNo;// obj.RfdReceiptNo;
+                    command1.Parameters.Add("V_RFD_RECEIPT_AMT", OracleType.VarChar).Value = 0;
+                    command1.Parameters.Add("V_RFD_PROPOSAL_NO", OracleType.VarChar).Value = "";
+                    command1.Parameters.Add("V_RFD_UPDATED_BY", OracleType.VarChar).Value = TempUserID;
+                    command1.Parameters.Add("V_RFD_REC_NARRATION", OracleType.VarChar).Value = "";
+                    command1.Parameters.Add("V_RFD_STATUS", OracleType.Number).Value = Convert.ToInt64(TempRefundStatus);
+
+
+                    command1.ExecuteNonQuery();
+                    connection1.Close();
+
+
+                }
+                catch (Exception ex)
+                {
+                    connection1.Close();
+                    return Request.CreateResponse(HttpStatusCode.ExpectationFailed);
                 }
 
-
-                string[] ids = { obj.RfdReceiptNo };
-                string ReceiptNoList = String.Join(",", ids);
-                ReceiptNoList = ReceiptNoList.Substring(0, ReceiptNoList.Length - 1);//'18HDO00059466','18HDO00065976','18HDO00065972'
-
-
-                ReceiptNoList = ReceiptNoList.Replace("'","");
-
-
-                connection1.Open();
-                command1 = new OracleCommand("HCI_SP_REC_STATUS_UPDATE");
-                command1.CommandType = CommandType.StoredProcedure;
-                command1.Connection = connection1;
-
-                command1.Parameters.Add("V_RFD_ID", OracleType.Number).Value = obj.RfdId;
-                command1.Parameters.Add("V_RFD_RECEIPT_NO", OracleType.VarChar).Value = ReceiptNoList;// obj.RfdReceiptNo;
-                command1.Parameters.Add("V_RFD_RECEIPT_AMT", OracleType.VarChar).Value = obj.RfdAmt;
-                command1.Parameters.Add("V_RFD_PROPOSAL_NO", OracleType.VarChar).Value = obj.RfdProposalNo;
-                command1.Parameters.Add("V_RFD_UPDATED_BY", OracleType.VarChar).Value = obj.RfdRecUpdatedBy;
-                command1.Parameters.Add("V_RFD_REC_NARRATION", OracleType.VarChar).Value = obj.RfdRecNarration;
-                command1.Parameters.Add("V_RFD_STATUS", OracleType.VarChar).Value = obj.RfdStatus;
-
-
-                command1.ExecuteNonQuery();
-                connection1.Close();
-                return Request.CreateResponse(HttpStatusCode.OK);
             }
-            catch (Exception exception)
-            {
-                connection1.Close();
-                return Request.CreateResponse(HttpStatusCode.ExpectationFailed);
-            }
+
+
+            //Batch execute
+            connection1.Open();
+            command1 = new OracleCommand("HCI_SP_REFUND_APPROVAL_REJECT");
+            command1.CommandType = CommandType.StoredProcedure;
+            command1.Connection = connection1;
+            command1.Parameters.Add("REFUND_ID", OracleType.Number).Value = TempRefundID;
+            command1.ExecuteNonQuery();
+            connection1.Close();
+
+
+            return Request.CreateResponse(HttpStatusCode.OK);
+
         }
+
+
+
+
+
+        //[HttpPost]
+        //[ActionName("UpdateRecStatusTEST")]
+        //public HttpResponseMessage UpdateRecStatusTEST(Refund obj)
+        //{
+        //    OracleConnection connection1 = new OracleConnection(ConnectionString);
+        //    OracleCommand command1;
+        //    try
+        //    {
+
+
+        //        if (obj.RfdReceiptNo == "")
+        //        {
+        //            return Request.CreateResponse(HttpStatusCode.OK);
+        //        }
+
+
+        //        string[] ids = { obj.RfdReceiptNo };
+        //        string ReceiptNoList = String.Join(",", ids);
+        //        ReceiptNoList = ReceiptNoList.Substring(0, ReceiptNoList.Length - 1);//'18HDO00059466','18HDO00065976','18HDO00065972'
+
+
+        //        ReceiptNoList = ReceiptNoList.Replace("'", "");
+
+
+        //        connection1.Open();
+        //        command1 = new OracleCommand("HCI_SP_REC_STATUS_UPDATE");
+        //        command1.CommandType = CommandType.StoredProcedure;
+        //        command1.Connection = connection1;
+
+        //        command1.Parameters.Add("V_RFD_ID", OracleType.Number).Value = obj.RfdId;
+        //        command1.Parameters.Add("V_RFD_RECEIPT_NO", OracleType.VarChar).Value = ReceiptNoList;// obj.RfdReceiptNo;
+        //        command1.Parameters.Add("V_RFD_RECEIPT_AMT", OracleType.VarChar).Value = obj.RfdAmt;
+        //        command1.Parameters.Add("V_RFD_PROPOSAL_NO", OracleType.VarChar).Value = obj.RfdProposalNo;
+        //        command1.Parameters.Add("V_RFD_UPDATED_BY", OracleType.VarChar).Value = obj.RfdRecUpdatedBy;
+        //        command1.Parameters.Add("V_RFD_REC_NARRATION", OracleType.VarChar).Value = obj.RfdRecNarration;
+        //        command1.Parameters.Add("V_RFD_STATUS", OracleType.VarChar).Value = obj.RfdStatus;
+
+
+        //        command1.ExecuteNonQuery();
+        //        connection1.Close();
+        //        return Request.CreateResponse(HttpStatusCode.OK);
+        //    }
+        //    catch (Exception exception)
+        //    {
+        //        connection1.Close();
+        //        return Request.CreateResponse(HttpStatusCode.ExpectationFailed);
+        //    }
+        //}
 
 
     }

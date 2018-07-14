@@ -29,7 +29,7 @@ namespace ComissionWebAPI.Controllers
             OracleConnection connection = new OracleConnection(ConnectionString);
             OracleCommand command1;
             string sql = " select t.rfd_receipt_no,t.rfd_amt,t.rfd_refund_date,t.rfd_agt_code ,t.rfd_reason " +
-                         " from hci_tbl_refunds t where t.rfd_receipt_no =:V_RNO";
+                         " from hci_tbl_may_refund t where t.rfd_receipt_no =:V_RNO";
 
             //" FROM HCI_TBL_PROPERTY t  WHERE t.TYPE=:V_TYPE ORDER BY T.Id asc";
 
@@ -77,7 +77,7 @@ namespace ComissionWebAPI.Controllers
             OracleConnection connection = new OracleConnection(ConnectionString);
             OracleCommand command2;
             string sql = " select h.cad_receipt_no,h.CAD_COMM_AMT,h.CAD_CAL_DATE,h.cad_policy_no,h.cad_pay_freq  " +
-                         " from hci_tbl_comm_adv_dm h where h.cad_receipt_no =:V_RNO";
+                         " from hci_tbl_may_comm_adv h where h.cad_receipt_no =:V_RNO";
 
 
             command2 = new OracleCommand(sql, connection);

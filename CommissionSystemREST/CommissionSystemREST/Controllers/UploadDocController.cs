@@ -327,7 +327,7 @@ namespace ComissionWebAPI.Controllers
                     Oracleconn.Close();
 
 
-
+                    //Transfer Data to HCI_TBL_DPTS_TEMP_BEFORE to HCI_TBL_DPTS_TEMP with auto ID
                     OracleConnection connection = new OracleConnection(ConnectionString);
                     connection.Open();
                     OracleCommand cmd = null;
